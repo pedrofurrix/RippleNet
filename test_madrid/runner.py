@@ -12,7 +12,7 @@ import pandas as pd
 from datetime import datetime
 from tensorflow.python.client import device_lib
 from process_signal import load_experimental_data
-
+curr_dir=os.path.dirname(os.path.abspath(__file__))
 def run_inference(data_path,
         model_path,
         session,
@@ -51,7 +51,7 @@ def run_inference(data_path,
 
 
     # load info on best model (path, threhsold settings)
-    with open('best_model.pkl', 'rb') as f:
+    with open(os.path.join(curr_dir, os.pardir, 'best_model.pkl'), 'rb') as f:
         best_model = pickle.load(f)
         print(best_model)
 
