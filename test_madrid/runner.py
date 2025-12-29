@@ -21,12 +21,13 @@ def run_inference(data_path,
         continuous_prediction=False):
 
     
-    channel = channel_sessions.get(session, None)
+    
     if channel is None:
         raise ValueError(f"No channel mapping provided for session {session}")
 
     Fs = 1250 # Hz, sampling freq
 
+    channel = channel_sessions.get(session, None)
     # Load signal + ripples
     filtered_signal, ripples = load_experimental_data(
         data_path,
