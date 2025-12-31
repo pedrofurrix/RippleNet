@@ -132,4 +132,5 @@ dmypy.json
 .DS_Store
 
 test_madrid/__pycache__/
-test_madrid/predictions/
+test_madrid/predictions/*
+!/test_madrid/predictions/all_networks_metrics_ripplenet.csv
