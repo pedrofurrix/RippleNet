@@ -1,12 +1,14 @@
-from runner import run_inference
+
 import argparse
 import gc
-import lists_sessions
+
 import sys
 import os
 curr_dir=os.path.dirname(os.path.abspath(__file__))
+print(f"Current directory: {curr_dir}")
 sys.path.append(curr_dir)
-
+import read_data.lists_sessions as lists_sessions
+from runner import run_inference
 
 # def parse_args():
 #     parser = argparse.ArgumentParser(description="Evaluate trained SNN model for ripple detection.")
@@ -31,21 +33,27 @@ if __name__ == "__main__":
     # Extra
 #     session_set={"2025-09-24_16-29-07", #R   
 #             "2025-09-24_17-38-17",} #R 
-    session_set.update({ "2025-09-22_17-42-27", 
-                 "2025-09-23_16-17-52", 
-                 "2025-09-24_11-34-51",
-                 "2025-09-25_11-21-53",
-                 "2025-09-25_12-52-22",})
+    session_set.update({ 
+        "2025-09-24_16-29-07", #R   
+        "2025-09-24_17-38-17", #R 
+        "2025-09-22_17-42-27", 
+        "2025-09-23_16-17-52", 
+        "2025-09-24_11-34-51",
+        "2025-09-25_11-21-53",
+        "2025-09-25_12-52-22",})
+    
 
     model_path=os.path.join(curr_dir,os.pardir,"trained_networks")
     channel_sessions=lists_sessions.channel_sessions
-    
-    for session in session_set:
-        print(f"Processing session: {session}")
-        run_inference(data_path,
-            model_path,
-            session,
-            channel_sessions=channel_sessions,
-            export_spikes=True,
-            continuous_prediction=False)
-        gc.collect()
+    thresholds=[0.3,0.4,0.5,0.6,0.7,0.8,0.9]
+    for threshold in thresholds:
+        for session in session_set:
+            print(f"Processing session: {session}")
+            run_inference(data_path,
+                model_path,
+                session,
+                channel_sessions=channel_sessions,
+                export_spikes=True,
+                continuous_prediction=False,
+                threshold=threshold)
+            gc.collect()

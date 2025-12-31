@@ -3,7 +3,6 @@ import numpy as np
 import scipy.signal as ss
 import tensorflow
 import tensorflow as tf
-from tensorflow import keras
 import h5py
 from matplotlib import colors
 from time import time, sleep
@@ -12,22 +11,24 @@ import pandas as pd
 from datetime import datetime
 from tensorflow.python.client import device_lib
 from process_signal import load_experimental_data
+
 curr_dir=os.path.dirname(os.path.abspath(__file__))
 def run_inference(data_path,
         model_path,
         session,
         channel_sessions=None,
         export_spikes=True,
-        continuous_prediction=False):
+        continuous_prediction=False,threshold=None):
 
     
     
-    if channel is None:
-        raise ValueError(f"No channel mapping provided for session {session}")
+ 
 
     Fs = 1250 # Hz, sampling freq
 
     channel = channel_sessions.get(session, None)
+    if channel is None:
+        raise ValueError(f"No channel mapping provided for session {session}")
     # Load signal + ripples
     filtered_signal, ripples = load_experimental_data(
         data_path,
@@ -61,7 +62,7 @@ def run_inference(data_path,
     lag = int(100 * Fs / 1000) # 100 ms @ Fs
 
     # Threshold settings for detecting ripple events from prediction, 
-    threshold = best_model['threshold'] # detection threshold on the interval (0, 1)
+    threshold = best_model['threshold'] if threshold is None else threshold # detection threshold on the interval (0, 1)
     distance = best_model['distance']  # timesteps, distance*Fs/1000 peak interdistance in units of ms
     width = best_model['width']       # timesteps, width*Fs/1000 peak width in units of ms. 
 
@@ -74,7 +75,8 @@ def run_inference(data_path,
             if model_file.endswith('.h5'):
                 model_file = os.path.join(model_path, model_file)
                 print(f"Loading model from: {model_file}")
-                model = keras.models.load_model(model_file)
+                model = tf.keras.models.load_model(model_file, compile=False)
+
     
                 # remove the .h5 extension
                 model_name=os.path.basename(model_file)[:-3]
@@ -127,16 +129,17 @@ def run_inference(data_path,
 
                 predictions, _ = ss.find_peaks(y_hat, height=threshold, distance=distance, width=width) # in samples
                 probabilities = y_hat[predictions]
-
+                predictions_time=predictions / Fs # to s
                 session_predictions[model_name] = {
+                    'predictions_time': predictions_time,
                     'predictions': predictions,
                     'probabilities': probabilities
                 }
 
     if export_spikes:
-        out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "predictions")
+        out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "predictions", str(threshold))
         os.makedirs(out_dir, exist_ok=True)
-        pkl_path = os.path.join(out_dir, f"{session}_predictions.pkl")
+        pkl_path = os.path.join(out_dir, f"{session}_predictions_{threshold}.pkl")
         
         with open(pkl_path, "wb") as f:
             pickle.dump(session_predictions, f)

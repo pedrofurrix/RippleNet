@@ -130,3 +130,6 @@ dmypy.json
 
 # macos stuff
 .DS_Store
+
+test_madrid/__pycache__/
+test_madrid/predictions/
